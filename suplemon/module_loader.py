@@ -3,9 +3,16 @@
 Addon module loader.
 """
 import os
-import imp
+import importlib.util
+import sys
 import logging
 
+def load_source(module_name, file_path):
+    spec = importlib.util.spec_from_file_location(module_name, file_path)
+    module = importlib.util.module_from_spec(spec)
+    sys.modules[module_name] = module
+    spec.loader.exec_module(module)
+    return module
 
 class ModuleLoader:
     def __init__(self, app=None):
@@ -63,7 +70,7 @@ class ModuleLoader:
         """Load single module file."""
         path = os.path.join(self.module_path, name+".py")
         try:
-            mod = imp.load_source(name, path)
+            mod = load_source(name, path)
         except:
             self.logger.error("Failed loading module: {0}".format(name), exc_info=True)
             return False
